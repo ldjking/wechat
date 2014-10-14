@@ -82,8 +82,8 @@ app.all('*', function(req, res, next) {
 app.use("/handler/", handler); //服务处理程序 handler
 app.use("/web/", express.static(__dirname + '/web')); //静态资源web
 
-var port=80;
-var host="localhost";
+var port=process.env.PORT||80;
+var host=process.env.IP||"localhost";
 
 
 console.log("app listen host=["+host+"] on port=["+port+"]");
