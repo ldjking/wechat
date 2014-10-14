@@ -1,8 +1,8 @@
 {
-  "name": "imweb_pubars",
+  "name": "millerliu_wechat",
   "version": "0.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "master.js",
   "directories": {
     "test": "test"
   },
