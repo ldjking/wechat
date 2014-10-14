@@ -2,30 +2,17 @@ var express = require('express');
 var app = express();
 var fs = require("fs");
 var util = require('util');
-var multer  = require('multer')
-var cookieParser = require('cookie-parser')
-
 
 process.on('uncaughtException', function(e) {
     console.log("server on error");　　
     console.log(e);
 });
 
-app.use(cookieParser());
+//app.use(cookieParser());
 app.use(logErrors);
 app.use(clientErrorHandler);
 app.use(errorHandler);
 
-function mix(obj, a, b) {
-    var obj = arguments[0];
-    for (var i = 1; i < arguments.length; i++) {
-        var a = arguments[i];
-        for (var p in a) {
-            obj[p] = a[p];
-        }
-    }
-    return obj;
-}
 
 function logErrors(err, req, res, next) {
 	console.log("logErrors");
@@ -50,82 +37,34 @@ function errorHandler(err, req, res, next) {
     });
 }
 
-function cb(res) {
-    return function(result) {
-		if(result&&result.type=="html"){
-			res.setHeader('content-type', 'text/html;charset=utf-8');
-			res.send(result.html);
-		}
-		else{
-			var resultStr = JSON.stringify(result);
-			//res.setEncoding('utf8');
-			
-			res.setHeader('content-type', 'text/plain;charset=utf-8');
-			res.send(resultStr);
-		}
-    }
-}
 
-function handler(req, res) { //处理所有服务请求
+function handler(req, res) { //处理所有服务请求  服务请求是否需要
     var method = req.path;
-	console.log("req.path",req.path);
+
 	var param = {};
 	var sysParam = {}; //系统参数  文件根目录  当前用户
 	sysParam.base = __dirname;
 	sysParam.req = req;
 	sysParam.res = res;
 	
-	if(req.path.match(/^\/upload/g)){
-		//console.log("上传类请求");
+
+	try {
 		var fn = require("./lib/handler" + method + ".js");
-		var result = fn(param, sysParam, cb(res)); //也允许异步返回
+		var result = fn(param, sysParam); //也允许异步返回
 		//console.log("result=["+result+"]");
 		if (result != null) {
 			res.setHeader('content-type', 'text/html;charset=utf-8');
 			res.send(result); //直接返回结果
 		}
-	}
-	else{
-		
-		var textBody = require("body/json");
-	
-		//console.log("url="+req.url);
-		textBody(req, res, function (err, body) {
-			// err is probably an invalid json error
-			if (err) {
-				//res.statusCode = 500
-				//return res.end("NO U")
-				body={};
-				console.log("parse body error",err);
-			}
-			console.log("parse body:",body);
-			req.body=body;
-			//console.log("body=["+JSON.stringify(body)+"]");
-			var str;
-	
-			mix(param, req.query, req.body, req.cookies);
-		
-
-			try {
-				var fn = require("./lib/handler" + method + ".js");
-				var result = fn(param, sysParam, cb(res)); //也允许异步返回
-				//console.log("result=["+result+"]");
-				if (result != null) {
-					res.setHeader('content-type', 'text/html;charset=utf-8');
-					res.send(result); //直接返回结果
-				}
-			}catch(e) {
-				console.log(e);
-				var result = {
-					flag: false,
-					code: "501",
-					msg: "方法不存在",
-					err:e
-				};
-				if (req.xhr) res.send(result);
-				else res.send(JSON.stringify(result));
-			}
-		})
+	}catch(e) {
+		console.log(e);
+		var result = {
+			flag: false,
+			code: "501",
+			msg: "方法不存在",
+			err:e
+		};
+		res.send(result);
 	}
 }
 
